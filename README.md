@@ -4,7 +4,7 @@ This is a somewhat hacky port of the LibreSSL build system to Zig. It builds Lib
 
 Notes:
 
-1. In order for this to work, `.\update.sh` must have first been run to bring in the LibreSSL OpenBSD sources. (Or, if you trust me, you may use the `zig-3.8.0` branch which has the upstream sources committed to the repository, for ease of use with the Zig package manager).
+1. In order for this to work, `.\update.sh` must have first been run to bring in the LibreSSL OpenBSD sources. (Or, if you trust me, you may use the `zig-3.8.1` branch which has the upstream sources committed to the repository, for ease of use with the Zig package manager).
 
 2. I don't know if this causes LibreSSL to be compiled in a way that Compromises Its Cryptographic Integrity. Hopefully it is not even possible to do such a thing in the first place. But I am not an expert, and I ain't looking to port the tests.
 
