@@ -52,7 +52,7 @@ const LibreSslLibs = struct {
             for (skiplist) |entry| {
                 switch (entry) {
                     .starts_with => |name| if (std.mem.startsWith(u8, child.path, name)) continue :walker,
-                    .ends_with => |name| if (std.mem.startsWith(u8, child.path, name)) continue :walker,
+                    .ends_with => |name| if (std.mem.endsWith(u8, child.path, name)) continue :walker,
                 }
             }
 
