@@ -243,6 +243,13 @@ pub fn libresslBuild(
         else => @panic("unsupported target CPU arch"),
     };
 
+    try b.build_root.handle.copyFile(
+        conf_header,
+        b.build_root.handle,
+        source_header_prefix ++ "openssl/opensslconf.h",
+        .{},
+    );
+
     libressl_libs.libcrypto.installHeader(conf_header, "openssl/opensslconf.h");
     libressl_libs.libssl.installHeader(conf_header, "openssl/opensslconf.h");
     libressl_libs.libtls.installHeader(conf_header, "openssl/opensslconf.h");
@@ -310,34 +317,6 @@ pub fn build(b: *std.Build) !void {
     // if (builtin.os.tag != .windows) try patchLibresslCompat(b);
     _ = try libresslBuild(b, .{ .target = target, .optimize = optimize });
 }
-
-// libressl_libs.defineCMacro("HAVE_ASPRINTF", null);
-// libressl_libs.defineCMacro("HAVE_REALLOCARRAY", null);
-// libressl_libs.defineCMacro("HAVE_STRCASECMP", null);
-// libressl_libs.defineCMacro("HAVE_STRLCAT", null);
-// libressl_libs.defineCMacro("HAVE_STRLCPY", null);
-// libressl_libs.defineCMacro("HAVE_STRNDUP", null);
-// libressl_libs.defineCMacro("HAVE_STRNLEN", null);
-// libressl_libs.defineCMacro("HAVE_STRSEP", null);
-// libressl_libs.defineCMacro("HAVE_STRTONUM", null);
-// libressl_libs.defineCMacro("HAVE_TIMEGM", null);
-// libressl_libs.defineCMacro("HAVE_ARC4RANDOM_BUF", null);
-// libressl_libs.defineCMacro("HAVE_ARC4RANDOM_UNIFORM", null);
-// libressl_libs.defineCMacro("HAVE_EXPLICIT_BZERO", null);
-// libressl_libs.defineCMacro("HAVE_GETAUXVAL", null);
-// libressl_libs.defineCMacro("HAVE_GETENTROPY", null);
-// libressl_libs.defineCMacro("HAVE_GETPAGESIZE", null);
-// libressl_libs.defineCMacro("HAVE_GETPROGNAME", null);
-// libressl_libs.defineCMacro("HAVE_SYSLOG_R", null);
-// libressl_libs.defineCMacro("HAVE_SYSLOG", null);
-// libressl_libs.defineCMacro("HAVE_TIMESPECSUB", null);
-// libressl_libs.defineCMacro("HAVE_TIMINGSAFE_BCMP", null);
-// libressl_libs.defineCMacro("HAVE_MEMCMP", null);
-// libressl_libs.defineCMacro("HAVE_MEMMEM", null);
-// libressl_libs.defineCMacro("HAVE_ENDIAN_H", null);
-// libressl_libs.defineCMacro("HAVE_MACHINE_ENDIAN_H", null);
-// libressl_libs.defineCMacro("HAVE_ERR_H", null);
-// libressl_libs.defineCMacro("HAVE_NETINET_IP_H", null);
 
 const SkipSpec = union(enum) {
     starts_with: []const u8,
