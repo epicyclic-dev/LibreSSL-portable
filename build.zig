@@ -5,11 +5,12 @@ const LibreSslBuildOptions = struct {
     libcrypto_name: []const u8 = "crypto",
     libssl_name: []const u8 = "ssl",
     libtls_name: []const u8 = "tls",
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
 };
 
 const LibreSslLibs = struct {
+    target: std.Build.ResolvedTarget,
     libcrypto: *std.Build.Step.Compile,
     libssl: *std.Build.Step.Compile,
     libtls: *std.Build.Step.Compile,
@@ -44,7 +45,7 @@ const LibreSslLibs = struct {
         base: []const u8,
         skiplist: []const SkipSpec,
     ) !void {
-        const dir = try b.build_root.handle.openIterableDir(base, .{});
+        const dir = try b.build_root.handle.openDir(base, .{ .iterate = true });
         var walker = try dir.walk(b.allocator);
         defer walker.deinit();
 
@@ -73,6 +74,7 @@ pub fn libresslBuild(
     options: LibreSslBuildOptions,
 ) !LibreSslLibs {
     const libressl_libs: LibreSslLibs = .{
+        .target = options.target,
         .libcrypto = b.addStaticLibrary(.{
             .name = options.libcrypto_name,
             .target = options.target,
@@ -94,7 +96,7 @@ pub fn libresslBuild(
 
     libressl_libs.linkLibC();
 
-    const tinfo = libressl_libs.libcrypto.target_info.target;
+    const tinfo = libressl_libs.target.result;
 
     const common_cflags = [_][]const u8{
         "-fno-sanitize=undefined",
@@ -106,13 +108,13 @@ pub fn libresslBuild(
         else => &common_cflags,
     };
 
-    libressl_libs.libcrypto.addCSourceFiles(&libcrypto_sources, cflags);
-    libressl_libs.libcrypto.addCSourceFiles(&libcrypto_nonasm, cflags);
-    libressl_libs.libcrypto.addCSourceFiles(&libcrypto_nonasm_or_armv4, cflags);
+    libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_sources, .flags = cflags });
+    libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_nonasm, .flags = cflags });
+    libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_nonasm_or_armv4, .flags = cflags });
 
-    libressl_libs.libssl.addCSourceFiles(&libssl_sources, cflags);
+    libressl_libs.libssl.addCSourceFiles(.{ .files = &libssl_sources, .flags = cflags });
 
-    libressl_libs.libtls.addCSourceFiles(&libtls_sources, cflags);
+    libressl_libs.libtls.addCSourceFiles(.{ .files = &libtls_sources, .flags = cflags });
 
     libressl_libs.defineCMacro("LIBRESSL_INTERNAL", null);
     libressl_libs.defineCMacro("OPENSSL_NO_HW_PADLOCK", null);
@@ -123,8 +125,8 @@ pub fn libresslBuild(
 
     switch (tinfo.os.tag) {
         .macos => {
-            libressl_libs.libcrypto.addCSourceFiles(&libcrypto_unix_sources, cflags);
-            libressl_libs.libcrypto.addCSourceFiles(&libcrypto_macos_compat, cflags);
+            libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_unix_sources, .flags = cflags });
+            libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_macos_compat, .flags = cflags });
 
             libressl_libs.defineCMacro("HAVE_CLOCK_GETTIME", null);
             libressl_libs.defineCMacro("HAVE_ASPRINTF", null);
@@ -147,8 +149,8 @@ pub fn libresslBuild(
             libressl_libs.defineCMacro("HAVE_NETINET_IP_H", null);
         },
         .linux => {
-            libressl_libs.libcrypto.addCSourceFiles(&libcrypto_unix_sources, cflags);
-            libressl_libs.libcrypto.addCSourceFiles(&libcrypto_linux_compat, cflags);
+            libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_unix_sources, .flags = cflags });
+            libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_linux_compat, .flags = cflags });
 
             libressl_libs.defineCMacro("_DEFAULT_SOURCE", null);
             libressl_libs.defineCMacro("_BSD_SOURCE", null);
@@ -176,9 +178,9 @@ pub fn libresslBuild(
             libressl_libs.defineCMacro("HAVE_NETINET_IP_H", null);
 
             if (tinfo.abi.isGnu()) {
-                libressl_libs.libcrypto.addCSourceFiles(&libcrypto_linux_glibc_compat, cflags);
+                libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_linux_glibc_compat, .flags = cflags });
             } else if (tinfo.abi.isMusl()) {
-                libressl_libs.libcrypto.addCSourceFiles(&libcrypto_linux_musl_compat, cflags);
+                libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_linux_musl_compat, .flags = cflags });
 
                 libressl_libs.defineCMacro("HAVE_STRLCAT", null);
                 libressl_libs.defineCMacro("HAVE_STRLCPY", null);
@@ -188,9 +190,9 @@ pub fn libresslBuild(
             libressl_libs.linkSystemLibrary("pthread");
         },
         .windows => {
-            libressl_libs.libcrypto.addCSourceFiles(&libcrypto_windows_sources, cflags);
-            libressl_libs.libcrypto.addCSourceFiles(&libcrypto_windows_compat, cflags);
-            libressl_libs.libtls.addCSourceFiles(&libtls_windows_sources, cflags);
+            libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_windows_sources, .flags = cflags });
+            libressl_libs.libcrypto.addCSourceFiles(.{ .files = &libcrypto_windows_compat, .flags = cflags });
+            libressl_libs.libtls.addCSourceFiles(.{ .files = &libtls_windows_sources, .flags = cflags });
 
             if (tinfo.abi != .msvc) {
                 libressl_libs.defineCMacro("_GNU_SOURCE", null);
