@@ -243,13 +243,6 @@ pub fn libresslBuild(
         else => @panic("unsupported target CPU arch"),
     };
 
-    try b.build_root.handle.copyFile(
-        conf_header,
-        b.build_root.handle,
-        source_header_prefix ++ "openssl/opensslconf.h",
-        .{},
-    );
-
     libressl_libs.libcrypto.installHeader(conf_header, "openssl/opensslconf.h");
     libressl_libs.libssl.installHeader(conf_header, "openssl/opensslconf.h");
     libressl_libs.libtls.installHeader(conf_header, "openssl/opensslconf.h");
@@ -295,6 +288,13 @@ pub fn libresslBuild(
 
         else => @panic("unsupported target CPU arch"),
     }
+
+    // add the header install path to the include path so that compilation will pick
+    // up "openssl/opensslconf.h". This is added last to avoid interfering with the
+    // somewhat messy include handling that libressl does.
+    libressl_libs.libcrypto.addIncludePath(.{ .path = b.getInstallPath(.header, "") });
+    libressl_libs.libssl.addIncludePath(.{ .path = b.getInstallPath(.header, "") });
+    libressl_libs.libtls.addIncludePath(.{ .path = b.getInstallPath(.header, "") });
 
     libressl_libs.libssl.linkLibrary(libressl_libs.libcrypto);
 
