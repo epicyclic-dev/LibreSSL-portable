@@ -68,13 +68,6 @@ const LibreSslLibs = struct {
     }
 };
 
-// TODO: this doesn't get cached, so it runs on every single build, which kind of sucks.
-// Also it won't work on windows.
-pub fn patchLibresslCompat(b: *std.Build) !void {
-    var child = std.ChildProcess.init(&.{ "/bin/sh", "update.sh" }, b.allocator);
-    _ = try child.spawnAndWait();
-}
-
 pub fn libresslBuild(
     b: *std.Build,
     options: LibreSslBuildOptions,
@@ -314,7 +307,6 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // if (builtin.os.tag != .windows) try patchLibresslCompat(b);
     _ = try libresslBuild(b, .{ .target = target, .optimize = optimize });
 }
 
@@ -453,48 +445,6 @@ const libcrypto_windows_compat = [_][]const u8{
     libcrypto_src_prefix ++ "compat/timingsafe_bcmp.c",
     libcrypto_src_prefix ++ "compat/timingsafe_memcmp.c",
 };
-
-// const libcrypto_compat_sources = [_][]const u8{
-//     libcrypto_src_prefix ++ "compat/bsd-asprintf.c",
-//     libcrypto_src_prefix ++ "compat/freezero.c",
-//     libcrypto_src_prefix ++ "compat/getpagesize.c",
-
-//     libcrypto_src_prefix ++ "compat/getprogname_windows.c",
-//     libcrypto_src_prefix ++ "compat/getprogname_linux.c",
-//     libcrypto_src_prefix ++ "compat/getprogname_unimpl.c",
-
-//     libcrypto_src_prefix ++ "compat/reallocarray.c",
-//     libcrypto_src_prefix ++ "compat/recallocarray.c",
-
-//     libcrypto_src_prefix ++ "compat/strcasecmp.c",
-//     libcrypto_src_prefix ++ "compat/strlcat.c",
-//     libcrypto_src_prefix ++ "compat/strlcpy.c",
-//     libcrypto_src_prefix ++ "compat/strndup.c",
-//     libcrypto_src_prefix ++ "compat/strnlen.c",
-//     libcrypto_src_prefix ++ "compat/strsep.c",
-//     libcrypto_src_prefix ++ "compat/strtonum.c",
-
-//     libcrypto_src_prefix ++ "compat/syslog_r.c",
-//     libcrypto_src_prefix ++ "compat/timegm.c",
-
-//     libcrypto_src_prefix ++ "compat/explicit_bzero_win.c",
-//     libcrypto_src_prefix ++ "compat/explicit_bzero.c",
-
-//     libcrypto_src_prefix ++ "compat/arc4random.c",
-//     libcrypto_src_prefix ++ "compat/arc4random_uniform.c",
-
-//     libcrypto_src_prefix ++ "compat/getentropy_win.c",
-//     libcrypto_src_prefix ++ "compat/getentropy_aix.c",
-//     libcrypto_src_prefix ++ "compat/getentropy_freebsd.c",
-//     libcrypto_src_prefix ++ "compat/getentropy_hpux.c",
-//     libcrypto_src_prefix ++ "compat/getentropy_linux.c",
-//     libcrypto_src_prefix ++ "compat/getentropy_netbsd.c",
-//     libcrypto_src_prefix ++ "compat/getentropy_osx.c",
-//     libcrypto_src_prefix ++ "compat/getentropy_solaris.c",
-
-//     libcrypto_src_prefix ++ "compat/timingsafe_bcmp.c",
-//     libcrypto_src_prefix ++ "compat/timingsafe_memcmp.c",
-// };
 
 const libcrypto_sources = [_][]const u8{
     libcrypto_src_prefix ++ "cpt_err.c",
